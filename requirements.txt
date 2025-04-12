@@ -1,0 +1,13 @@
+flask
+pandas
+flask-cors
+python-dotenv
+google-generativeai
+google-cloud-vertex-ai
+google-cloud-aiplatform
+google-cloud-storage
+google-cloud-vertex-ai-dependencies
+google-cloud-aiplatform-dependencies
+google-cloud-vertex-ai-dependencies
+google-cloud-aiplatform-dependencies
+google-cloud-vertex-ai-dependencies

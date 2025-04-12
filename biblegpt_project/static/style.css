@@ -1,0 +1,788 @@
+:root {
+    --background-light: #f4f9ff;
+    --background-dark: #1a1a1a;
+    --card-light: #ffffff;
+    --card-dark: #2a2a2a;
+    --text-light: #333;
+    --text-dark: #f0f0f0;
+    --primary: #007bff;
+    --accent: #4db8ff;
+    --transition-speed: 0.3s;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--background-light);
+    color: var(--text-light);
+    margin: 0;
+    padding: 0;
+    transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+body.dark-mode {
+    background: var(--background-dark);
+    color: var(--text-dark);
+}
+
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: var(--card-light);
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    transition: background var(--transition-speed), color var(--transition-speed), box-shadow var(--transition-speed);
+    animation: fadeInUp 0.6s ease-in-out;
+}
+
+body.dark-mode .container {
+    background-color: var(--card-dark);
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: var(--primary);
+    animation: fadeInDown 0.6s ease;
+}
+
+.search-section,
+.generate-section,
+.btn-group,
+.mode-toggle {
+    margin: 20px 0;
+    animation: fadeIn 0.6s ease;
+}
+.ask-question-section {
+    margin: 20px 0;
+    animation: fadeIn 0.6s ease;
+}
+
+.ask-question-section input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    transition: border-color var(--transition-speed);
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color var(--transition-speed), transform 0.2s;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+#verseDisplay,
+#generateDisplay {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f0f8ff;
+    border-left: 5px solid var(--primary);
+    border-radius: 8px;
+    font-size: 1.2em;
+    animation: fadeIn 0.6s ease;
+    transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+body.dark-mode #verseDisplay,
+body.dark-mode #generateDisplay {
+    background-color: #333;
+    color: var(--text-dark);
+}
+
+#errorDisplay {
+    margin-top: 20px;
+    color: red;
+    font-weight: bold;
+    animation: fadeIn 0.6s ease;
+}
+
+#loader {
+    margin-top: 20px;
+    font-size: 1.4em;
+    color: var(--primary);
+    animation: pulse 1.5s infinite;
+}
+
+#toggleDarkMode {
+    background-color: #333;
+    color: white;
+}
+
+body.dark-mode #toggleDarkMode {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+        margin: 20px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    input[type="text"],
+    button {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .btn-group,
+    .search-section,
+    .generate-section {
+        text-align: center;
+    }
+}
+/* Dark mode styles for mobile */
+@media (max-width: 600px) and (prefers-color-scheme: dark) {
+    body {
+        background: var(--background-dark);
+        color: var(--text-dark);
+    }
+
+    .container {
+        background-color: var(--card-dark);
+    }
+
+    #verseDisplay,
+    #generateDisplay {
+        background-color: #444;
+        color: var(--text-dark);
+    }
+    /* Navigation Bar */
+.navbar {
+    background-color: var(--card-light);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li a {
+    text-decoration: none;
+    color: var(--text-light);
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: color var(--transition-speed);
+}
+
+.nav-links li a:hover {
+    color: var(--primary);
+}
+
+/* Dark mode navbar */
+body.dark-mode .navbar {
+    background-color: var(--card-dark);
+}
+
+body.dark-mode .nav-links li a {
+    color: var(--text-dark);
+}
+
+body.dark-mode .nav-links li a:hover {
+    color: var(--accent);
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+    .nav-links {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+}
+/* Footer */
+footer {
+    background-color: var(--card-light);
+    color: var(--text-light);
+    text-align: center;
+    padding: 1rem 0;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    transition: background var(--transition-speed), color var(--transition-speed);
+
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    font-size: 0.9rem;
+}
+}:root {
+    --background-light: #f4f9ff;
+    --background-dark: #1a1a1a;
+    --card-light: #ffffff;
+    --card-dark: #2a2a2a;
+    --text-light: #333;
+    --text-dark: #f0f0f0;
+    --primary: #007bff;
+    --accent: #4db8ff;
+    --transition-speed: 0.3s;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: var(--background-light);
+    color: var(--text-light);
+    margin: 0;
+    padding: 0;
+    transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+body.dark-mode {
+    background: var(--background-dark);
+    color: var(--text-dark);
+}
+
+.container {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: var(--card-light);
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+    transition: background var(--transition-speed), color var(--transition-speed), box-shadow var(--transition-speed);
+    animation: fadeInUp 0.6s ease-in-out;
+}
+
+body.dark-mode .container {
+    background-color: var(--card-dark);
+}
+
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: var(--primary);
+    animation: fadeInDown 0.6s ease;
+}
+
+.search-section,
+.generate-section,
+.btn-group,
+.mode-toggle {
+    margin: 20px 0;
+    animation: fadeIn 0.6s ease;
+}
+.ask-question-section {
+    margin: 20px 0;
+    animation: fadeIn 0.6s ease;
+}
+
+.ask-question-section input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 10px;
+    transition: border-color var(--transition-speed);
+}
+
+input[type="text"]:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+button {
+    padding: 12px 20px;
+    font-size: 16px;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color var(--transition-speed), transform 0.2s;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+#verseDisplay,
+#generateDisplay {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f0f8ff;
+    border-left: 5px solid var(--primary);
+    border-radius: 8px;
+    font-size: 1.2em;
+    animation: fadeIn 0.6s ease;
+    transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+body.dark-mode #verseDisplay,
+body.dark-mode #generateDisplay {
+    background-color: #333;
+    color: var(--text-dark);
+}
+
+#errorDisplay {
+    margin-top: 20px;
+    color: red;
+    font-weight: bold;
+    animation: fadeIn 0.6s ease;
+}
+
+#loader {
+    margin-top: 20px;
+    font-size: 1.4em;
+    color: var(--primary);
+    animation: pulse 1.5s infinite;
+}
+
+#toggleDarkMode {
+    background-color: #333;
+    color: white;
+}
+
+body.dark-mode #toggleDarkMode {
+    background-color: #f0f0f0;
+    color: #333;
+}
+
+/* Animations */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+    100% {
+        opacity: 1;
+    }
+}
+
+/* Responsive design */
+@media (max-width: 600px) {
+    .container {
+        padding: 20px;
+        margin: 20px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    input[type="text"],
+    button {
+        width: 100%;
+        margin: 10px 0;
+    }
+
+    .btn-group,
+    .search-section,
+    .generate-section {
+        text-align: center;
+    }
+}
+/* Dark mode styles for mobile */
+@media (max-width: 600px) and (prefers-color-scheme: dark) {
+    body {
+        background: var(--background-dark);
+        color: var(--text-dark);
+    }
+
+    .container {
+        background-color: var(--card-dark);
+    }
+
+    #verseDisplay,
+    #generateDisplay {
+        background-color: #444;
+        color: var(--text-dark);
+    }
+    /* Navigation Bar */
+.navbar {
+    background-color: var(--card-light);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    padding: 1rem 0;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    transition: background var(--transition-speed), color var(--transition-speed);
+}
+
+.nav-links {
+    list-style: none;
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li a {
+    text-decoration: none;
+    color: var(--text-light);
+    font-weight: bold;
+    font-size: 1.1rem;
+    transition: color var(--transition-speed);
+}
+
+.nav-links li a:hover {
+    color: var(--primary);
+}
+
+/* Dark mode navbar */
+body.dark-mode .navbar {
+    background-color: var(--card-dark);
+}
+
+body.dark-mode .nav-links li a {
+    color: var(--text-dark);
+}
+
+body.dark-mode .nav-links li a:hover {
+    color: var(--accent);
+}
+
+/* Mobile responsive */
+@media (max-width: 600px) {
+    .nav-links {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
+    }
+}
+/* Footer */
+footer {
+    background-color: var(--card-light);
+    color: var(--text-light);
+    text-align: center;
+    padding: 1rem 0;
+    position: relative;
+    bottom: 0;
+    width: 100%;
+    transition: background var(--transition-speed), color var(--transition-speed);
+
+    box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    font-size: 0.9rem;
+}
+footer.dark-mode {
+    background-color: var(--card-dark);
+    color: var(--text-dark);
+}
+footer a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-speed);
+}
+.footer a:hover {
+    color: var(--accent);
+}
+.chatbot-container {
+    margin-top: 30px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    padding: 15px;
+    background-color: var(--card-light);
+    max-width: 600px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.chat-window {
+    height: 250px;
+    overflow-y: auto;
+    background: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+}
+
+.chat-message {
+    margin: 8px 0;
+}
+
+.chat-user {
+    text-align: right;
+    color: #333;
+}
+
+.chat-bot {
+    text-align: left;
+    color: #007b83;
+}
+
+.chat-input {
+    display: flex;
+    gap: 10px;
+}
+
+.chat-input input {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+.footer a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-speed);
+}
+.footer a:hover {
+    color: var(--accent);
+}
+.chat-input button {
+    padding: 8px 12px;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color var(--transition-speed), transform 0.2s;
+}
+
+.chat-input button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+.chatbot-container.dark-mode {
+    background-color: var(--card-dark);
+}
+.footer a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-speed);
+} 
+
+.footer a:hover {
+    color: var(--accent);
+}
+.footer a {
+    color: var(--primary);
+    text-decoration: none;
+    transition: color var(--transition-speed);
+}
+/* Info Pages (About, Help, Contact) */
+.info-page {
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    background-color: var(--card-light);
+    border-radius: 16px;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05);
+    transition: background var(--transition-speed), color var(--transition-speed);
+    animation: fadeInUp 0.6s ease-in-out;
+    line-height: 1.7;
+    font-size: 1.05rem;
+}
+
+body.dark-mode .info-page {
+    background-color: var(--card-dark);
+    color: var(--text-dark);
+}
+
+/* Headings inside info pages */
+.info-page h2,
+.info-page h3 {
+    color: var(--primary);
+    margin-top: 1.5em;
+    animation: fadeInDown 0.6s ease;
+}
+
+/* Paragraph spacing */
+.info-page p {
+    margin-bottom: 1em;
+}
+
+/* Lists inside info pages */
+.info-page ul,
+.info-page ol {
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+}
+
+/* Contact form styling */
+.contact-form input[type="text"],
+.contact-form input[type="email"],
+.contact-form textarea {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    margin-bottom: 15px;
+    transition: border-color var(--transition-speed);
+}
+
+.contact-form textarea {
+    min-height: 120px;
+    resize: vertical;
+}
+
+.contact-form input[type="text"]:focus,
+.contact-form input[type="email"]:focus,
+.contact-form textarea:focus {
+    outline: none;
+    border-color: var(--primary);
+}
+
+/* Submit button */
+.contact-form button {
+    padding: 12px 24px;
+    font-size: 16px;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color var(--transition-speed), transform 0.2s;
+}
+
+.contact-form button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+body.dark-mode .contact-form input,
+body.dark-mode .contact-form textarea {
+    background-color: #444;
+    color: var(--text-dark);
+    border-color: #666;
+}
+body.dark-mode .contact-form button {
+    background-color: var(--primary);
+    color: white;
+    border: none;
+
+}
+
+body.dark-mode .contact-form button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+body.dark-mode .contact-form input,
+body.dark-mode .contact-form textarea {
+    background-color: #444;
+    color: var(--text-dark);
+    border-color: #666;
+}
+
+}
