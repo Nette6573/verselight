@@ -3,6 +3,5 @@ pandas
 flask-cors
 python-dotenv
 google-generativeai
-google-cloud-vertex-ai
 google-cloud-aiplatform
 google-cloud-storage
