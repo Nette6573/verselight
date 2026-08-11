@@ -1,7 +1,5 @@
-flask
-pandas
+Flask
 flask-cors
 python-dotenv
-google-generativeai
-google-cloud-aiplatform
-google-cloud-storage
+pandas
+google-genai
