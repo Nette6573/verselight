@@ -9,207 +9,170 @@ from biblegpt import (
     save_verse
 )
 
-
-# =========================================================
-# APP
-# =========================================================
-
 app = Flask(__name__)
-
 CORS(app)
 
 
-# =========================================================
-# PAGES
-# =========================================================
+# --------------------------------------------------
+# Pages
+# --------------------------------------------------
 
 @app.route("/")
 def index():
-
     return render_template("index.html")
 
 
 @app.route("/help")
 def help_page():
-
     return render_template("help.html")
 
 
 @app.route("/about")
 def about_page():
-
     return render_template("about.html")
 
 
 @app.route("/contact")
 def contact_page():
-
     return render_template("contact.html")
 
 
-# =========================================================
-# RANDOM VERSE
-# =========================================================
+# --------------------------------------------------
+# API: Random verse
+# --------------------------------------------------
 
 @app.route("/api/random", methods=["GET"])
 def random_verse():
-
     try:
+        verse = get_random_verse()
+        return jsonify({"verse": verse})
 
+    except Exception as e:
+        print(f"Random verse error: {e}")
         return jsonify({
-            "verse": get_random_verse()
-        })
-
-    except Exception as error:
-
-        return jsonify({
-            "error": str(error)
+            "error": "Unable to retrieve a random verse."
         }), 500
 
 
-# =========================================================
-# SEARCH
-# =========================================================
+# --------------------------------------------------
+# API: Search
+# --------------------------------------------------
 
 @app.route("/api/search", methods=["GET"])
 def search():
-
-    keyword = request.args.get(
-        "q",
-        ""
-    ).strip()
+    keyword = request.args.get("q", "").strip()
 
     try:
+        result = search_verse(keyword)
 
         return jsonify({
-            "verse": search_verse(keyword)
+            "verse": result
         })
 
-    except Exception as error:
+    except Exception as e:
+        print(f"Search error: {e}")
 
         return jsonify({
-            "error": str(error)
+            "error": "Unable to search the Bible right now."
         }), 500
 
 
-# =========================================================
-# GENERATE
-# =========================================================
+# --------------------------------------------------
+# API: Generate Bible-style verse
+# --------------------------------------------------
 
 @app.route("/api/generate", methods=["GET"])
 def generate():
-
-    topic = request.args.get(
-        "q",
-        ""
-    ).strip()
+    topic = request.args.get("q", "").strip()
 
     if not topic:
-
         return jsonify({
-            "error": "Please enter a topic."
+            "verse": "Please enter a topic."
         }), 400
 
     try:
-
-        verse = generate_bible_style_verse(
-            topic
-        )
+        verse = generate_bible_style_verse(topic)
 
         return jsonify({
             "verse": verse
         })
 
-    except Exception as error:
+    except Exception as e:
+        print(f"Generate error: {e}")
 
         return jsonify({
-            "error": str(error)
+            "error": "Unable to generate a verse right now."
         }), 500
 
 
-# =========================================================
-# BIBLE QUESTION
-# =========================================================
+# --------------------------------------------------
+# API: Bible question
+# --------------------------------------------------
 
 @app.route("/api/question", methods=["GET"])
 def ask_question():
-
-    question = request.args.get(
-        "q",
-        ""
-    ).strip()
+    question = request.args.get("q", "").strip()
 
     if not question:
-
         return jsonify({
-            "verses":
-            "Please ask a Bible-related question."
+            "verses": "Please ask a Bible-related question."
         }), 400
 
     try:
-
-        verses = get_scriptures_about_topic(
-            question
-        )
+        verses = get_scriptures_about_topic(question)
 
         return jsonify({
             "verses": verses
         })
 
-    except Exception as error:
+    except Exception as e:
+        print(f"Question error: {e}")
 
         return jsonify({
-            "error": str(error)
+            "error": "Unable to process your question right now."
         }), 500
 
 
-# =========================================================
-# SAVE
-# =========================================================
+# --------------------------------------------------
+# API: Save verse
+# --------------------------------------------------
 
 @app.route("/api/save", methods=["POST"])
 def save():
+    data = request.get_json(silent=True) or {}
 
-    data = request.get_json(
-        silent=True
-    ) or {}
-
-    verse = data.get(
-        "verse",
-        ""
-    ).strip()
+    verse = data.get("verse", "").strip()
 
     if not verse:
-
         return jsonify({
             "error": "No verse provided."
         }), 400
 
     try:
+        saved = save_verse(verse)
 
-        if save_verse(verse):
-
+        if saved:
             return jsonify({
                 "message": "Verse saved."
-            })
+            }), 200
 
         return jsonify({
             "error": "Unable to save verse."
         }), 500
 
-    except Exception as error:
+    except Exception as e:
+        print(f"Save error: {e}")
 
         return jsonify({
-            "error": str(error)
+            "error": "Unable to save verse."
         }), 500
 
 
-# =========================================================
-# LOCAL DEVELOPMENT
-# =========================================================
+# --------------------------------------------------
+# Local development
+# --------------------------------------------------
 
 if __name__ == "__main__":
-
     app.run(
         debug=True,
         host="0.0.0.0",
