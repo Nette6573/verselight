@@ -1,121 +1,86 @@
 import os
 import json
 import random
-from pathlib import Path
 
 import pandas as pd
-from dotenv import load_dotenv
 from google import genai
 
 
 # ---------------------------------------------------------
-# Environment
+# CONFIGURATION
 # ---------------------------------------------------------
-
-load_dotenv()
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 
-# Do NOT crash the entire Flask application if the API key
-# is missing. The AI functions will report the problem instead.
-client = None
+if not GOOGLE_API_KEY:
+    raise RuntimeError("GOOGLE_API_KEY environment variable is not set.")
 
-if GOOGLE_API_KEY:
-    client = genai.Client(api_key=GOOGLE_API_KEY)
-
-
-# ---------------------------------------------------------
-# File paths
-# ---------------------------------------------------------
-
-BASE_DIR = Path(__file__).resolve().parent
-
-# Bible CSV is expected to be in the same directory as this file.
-BIBLE_DATA_FILE = BASE_DIR / "bible_data_set.csv"
-
-# Vercel's filesystem is not persistent between deployments/
-# invocations. /tmp is writable during a function execution.
-SAVED_VERSES_FILE = Path("/tmp/saved_verses.json")
-
-
-# ---------------------------------------------------------
-# Load Bible dataset
-# ---------------------------------------------------------
-
-try:
-    bible_df = pd.read_csv(BIBLE_DATA_FILE)
-except Exception as e:
-    bible_df = pd.DataFrame(columns=["citation", "text"])
-    print(f"Warning: Could not load Bible dataset: {e}")
-
-
-# ---------------------------------------------------------
-# Gemini configuration
-# ---------------------------------------------------------
+client = genai.Client(api_key=GOOGLE_API_KEY)
 
 MODEL_NAME = "gemini-2.5-flash"
 
 
-def get_ai_client():
-    """
-    Return the Gemini client when the API key is available.
-    """
-    if client is None:
-        raise RuntimeError(
-            "GOOGLE_API_KEY is not configured. "
-            "Add GOOGLE_API_KEY to the Vercel environment variables."
-        )
+# ---------------------------------------------------------
+# LOAD BIBLE DATA
+# ---------------------------------------------------------
 
-    return client
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+BIBLE_FILE = os.path.join(BASE_DIR, "bible_data_set.csv")
+SAVED_VERSES_FILE = os.path.join(BASE_DIR, "saved_verses.json")
+
+bible_df = pd.read_csv(BIBLE_FILE)
 
 
 # ---------------------------------------------------------
-# Save generated verse
+# SAVE VERSE
 # ---------------------------------------------------------
 
 def save_verse(verse):
     try:
-        if SAVED_VERSES_FILE.exists():
-            with open(SAVED_VERSES_FILE, "r", encoding="utf-8") as f:
-                saved_verses = json.load(f)
+        if os.path.exists(SAVED_VERSES_FILE):
+            with open(SAVED_VERSES_FILE, "r", encoding="utf-8") as file:
+                saved_verses = json.load(file)
         else:
             saved_verses = []
 
         saved_verses.append(verse)
 
-        with open(SAVED_VERSES_FILE, "w", encoding="utf-8") as f:
-            json.dump(saved_verses, f, indent=4, ensure_ascii=False)
+        with open(SAVED_VERSES_FILE, "w", encoding="utf-8") as file:
+            json.dump(saved_verses, file, indent=4, ensure_ascii=False)
 
-    except Exception as e:
-        print(f"Warning: Could not save verse: {e}")
+        return True
+
+    except Exception as error:
+        print(f"Error saving verse: {error}")
+        return False
 
 
 # ---------------------------------------------------------
-# Get random Bible verse
+# RANDOM BIBLE VERSE
 # ---------------------------------------------------------
 
 def get_random_verse():
-    if bible_df.empty:
-        return "Bible dataset is unavailable."
-
     verse = bible_df.sample(1).iloc[0]
 
     return f"{verse['citation']} - {verse['text']}"
 
 
 # ---------------------------------------------------------
-# Search Bible verses
+# SEARCH BIBLE VERSES
 # ---------------------------------------------------------
 
 def search_verse(keyword):
-    if bible_df.empty:
-        return "Bible dataset is unavailable."
+    keyword = keyword.strip()
+
+    if not keyword:
+        return "Please enter a word or phrase to search for."
 
     results = bible_df[
         bible_df["text"].str.contains(
             keyword,
             case=False,
-            na=False
+            na=False,
+            regex=False
         )
     ]
 
@@ -131,68 +96,95 @@ def search_verse(keyword):
 
 
 # ---------------------------------------------------------
-# Generate Bible-style verse
+# GENERATE BIBLE-STYLE VERSE
 # ---------------------------------------------------------
 
 def generate_bible_style_verse(prompt):
+    prompt = prompt.strip()
+
+    if not prompt:
+        return "Please enter a topic for your verse."
+
+    full_prompt = f"""
+Write a short original Bible-inspired devotional verse
+in a poetic, traditional style.
+
+Topic:
+{prompt}
+
+Important:
+- This must be an original creative passage.
+- Do not claim it is an actual Bible verse.
+- Do not invent a Bible citation.
+- Use warm, encouraging language.
+"""
+
     try:
-        ai_client = get_ai_client()
-
-        full_prompt = (
-            "Write a poetic Bible-style verse in King James English "
-            f"about: {prompt}"
-        )
-
-        response = ai_client.models.generate_content(
+        response = client.models.generate_content(
             model=MODEL_NAME,
             contents=full_prompt
         )
 
-        verse = (response.text or "").strip()
+        verse = response.text.strip()
 
         if not verse:
-            return "The AI did not return a verse."
+            return "Gemini returned an empty response."
 
         save_verse(verse)
 
         return verse
 
-    except Exception as e:
-        print(f"Gemini generation error: {e}")
-        return f"Error generating verse: {str(e)}"
+    except Exception as error:
+        print(f"Gemini generation error: {error}")
+        return f"Error generating verse: {error}"
 
 
 # ---------------------------------------------------------
-# Extract topic and find related scriptures
+# FIND SCRIPTURES RELATED TO A QUESTION
 # ---------------------------------------------------------
 
 def get_scriptures_about_topic(question):
+    question = question.strip()
+
+    if not question:
+        return "Please ask a Bible-related question."
+
+    topic_prompt = f"""
+Identify the main Bible topic in this question.
+
+Question:
+{question}
+
+Respond with ONLY one or two simple keywords.
+
+Examples:
+"What does the Bible say about loving others?"
+love
+
+"How can I trust God during difficult times?"
+faith
+
+"What does Scripture say about forgiving people?"
+forgiveness
+"""
+
     try:
-        ai_client = get_ai_client()
-
-        topic_prompt = (
-            "Extract the main topic someone is asking about in this "
-            "question:\n"
-            f"'{question}'\n\n"
-            "Respond with only one or two keywords such as "
-            "'faith', 'love', or 'forgiveness'."
-        )
-
-        topic_response = ai_client.models.generate_content(
+        topic_response = client.models.generate_content(
             model=MODEL_NAME,
             contents=topic_prompt
         )
 
-        topic = (topic_response.text or "").strip().lower()
+        topic = topic_response.text.strip().lower()
 
-        if not topic:
-            return "I couldn't identify a scripture topic."
+        # Remove accidental punctuation
+        topic = topic.replace(".", "").replace(",", "")
 
         matches = bible_df[
             bible_df["text"].str.contains(
                 topic,
                 case=False,
-                na=False
+                na=False,
+                regex=False
             )
         ]
 
@@ -206,6 +198,6 @@ def get_scriptures_about_topic(question):
 
         return "\n\n".join(results)
 
-    except Exception as e:
-        print(f"Scripture topic error: {e}")
-        return f"Error processing question: {str(e)}"
+    except Exception as error:
+        print(f"Question processing error: {error}")
+        return f"Error processing question: {error}"
