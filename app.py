@@ -1,4 +1,3 @@
-import os
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 
@@ -7,34 +6,20 @@ from biblegpt import (
     search_verse,
     generate_bible_style_verse,
     get_scriptures_about_topic,
-    save_verse,
+    save_verse
 )
 
-# ---------------------------------------------------------
-# Paths
-# ---------------------------------------------------------
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-TEMPLATE_DIR = os.path.join(BASE_DIR, "biblegpt_project", "templates")
-STATIC_DIR = os.path.join(BASE_DIR, "biblegpt_project", "static")
-
 
 # ---------------------------------------------------------
-# Flask application
+# APP CONFIGURATION
 # ---------------------------------------------------------
 
-app = Flask(
-    __name__,
-    template_folder=TEMPLATE_DIR,
-    static_folder=STATIC_DIR,
-)
-
+app = Flask(__name__)
 CORS(app)
 
 
 # ---------------------------------------------------------
-# Web pages
+# WEB PAGES
 # ---------------------------------------------------------
 
 @app.route("/")
@@ -58,78 +43,125 @@ def contact_page():
 
 
 # ---------------------------------------------------------
-# Bible API
+# API - RANDOM VERSE
 # ---------------------------------------------------------
 
 @app.route("/api/random", methods=["GET"])
 def random_verse():
-    return jsonify({
-        "verse": get_random_verse()
-    })
+    try:
+        verse = get_random_verse()
+        return jsonify({"verse": verse})
 
+    except Exception as error:
+        return jsonify({
+            "error": f"Unable to get random verse: {error}"
+        }), 500
+
+
+# ---------------------------------------------------------
+# API - SEARCH VERSES
+# ---------------------------------------------------------
 
 @app.route("/api/search", methods=["GET"])
 def search():
-    keyword = request.args.get("q", default="")
+    keyword = request.args.get("q", "").strip()
 
-    return jsonify({
-        "verse": search_verse(keyword)
-    })
+    try:
+        verse = search_verse(keyword)
+        return jsonify({"verse": verse})
 
+    except Exception as error:
+        return jsonify({
+            "error": f"Search failed: {error}"
+        }), 500
+
+
+# ---------------------------------------------------------
+# API - GENERATE VERSE
+# ---------------------------------------------------------
 
 @app.route("/api/generate", methods=["GET"])
 def generate():
-    topic = request.args.get("q", default="")
+    topic = request.args.get("q", "").strip()
 
     if not topic:
         return jsonify({
-            "verse": "Please provide a topic."
+            "verse": "Please enter a topic."
         }), 400
 
-    verse = generate_bible_style_verse(topic)
+    try:
+        verse = generate_bible_style_verse(topic)
 
-    return jsonify({
-        "verse": verse
-    })
+        return jsonify({
+            "verse": verse
+        })
 
+    except Exception as error:
+        return jsonify({
+            "error": f"Generation failed: {error}"
+        }), 500
+
+
+# ---------------------------------------------------------
+# API - BIBLE QUESTION
+# ---------------------------------------------------------
 
 @app.route("/api/question", methods=["GET"])
 def ask_question():
-    question = request.args.get("q", default="")
+    question = request.args.get("q", "").strip()
 
     if not question:
         return jsonify({
-            "verse": "Please ask a question like "
-                     "'What does the Bible say about peace?'"
+            "verses": "Please ask a Bible-related question."
         }), 400
 
-    verses = get_scriptures_about_topic(question)
+    try:
+        verses = get_scriptures_about_topic(question)
 
-    return jsonify({
-        "verses": verses
-    })
+        return jsonify({
+            "verses": verses
+        })
 
+    except Exception as error:
+        return jsonify({
+            "error": f"Question processing failed: {error}"
+        }), 500
+
+
+# ---------------------------------------------------------
+# API - SAVE VERSE
+# ---------------------------------------------------------
 
 @app.route("/api/save", methods=["POST"])
 def save():
     data = request.get_json(silent=True) or {}
-
-    verse = data.get("verse")
+    verse = data.get("verse", "").strip()
 
     if not verse:
         return jsonify({
             "error": "No verse provided."
         }), 400
 
-    save_verse(verse)
+    try:
+        saved = save_verse(verse)
 
-    return jsonify({
-        "message": "Verse saved."
-    }), 200
+        if saved:
+            return jsonify({
+                "message": "Verse saved."
+            })
+
+        return jsonify({
+            "error": "Unable to save verse."
+        }), 500
+
+    except Exception as error:
+        return jsonify({
+            "error": f"Save failed: {error}"
+        }), 500
 
 
 # ---------------------------------------------------------
-# Local development
+# LOCAL DEVELOPMENT
 # ---------------------------------------------------------
 
 if __name__ == "__main__":
