@@ -3,194 +3,374 @@ import json
 import pandas as pd
 from google import genai
 
-# --------------------------------------------------
+
+# ============================================================
 # Configuration
-# --------------------------------------------------
+# ============================================================
 
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
-
-if not GOOGLE_API_KEY:
-    raise RuntimeError("GOOGLE_API_KEY is not configured.")
-
-client = genai.Client(api_key=GOOGLE_API_KEY)
-
 MODEL_NAME = "gemini-2.5-flash"
 
-# --------------------------------------------------
-# Bible dataset
-# --------------------------------------------------
+_client = None
+
+
+def get_ai_client():
+    """
+    Create the Gemini client only when an AI feature needs it.
+    This prevents Gemini configuration problems from crashing
+    the entire Flask application at startup.
+    """
+    global _client
+
+    if _client is not None:
+        return _client
+
+    if not GOOGLE_API_KEY:
+        raise RuntimeError("GOOGLE_API_KEY is not configured.")
+
+    _client = genai.Client(api_key=GOOGLE_API_KEY)
+
+    return _client
+
+
+# ============================================================
+# Bible Dataset
+# ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BIBLE_FILE = os.path.join(BASE_DIR, "bible_data_set.csv")
+
+BIBLE_FILE = os.path.join(
+    BASE_DIR,
+    "bible_data_set.csv"
+)
 
 bible_df = pd.read_csv(BIBLE_FILE)
 
-# --------------------------------------------------
-# Random Bible verse
-# --------------------------------------------------
 
-def get_random_verse():
-    verse = bible_df.sample(1).iloc[0]
+# ============================================================
+# Helper Functions
+# ============================================================
 
-    return f"{verse['citation']} - {verse['text']}"
+def format_verse(row):
+    """Format a Bible dataset row for display."""
+    return f"{row['citation']} - {row['text']}"
 
 
-# --------------------------------------------------
-# Search Bible verses
-# --------------------------------------------------
+def search_bible_text(keyword, limit=5):
+    """Search the Bible dataset for a keyword or phrase."""
 
-def search_verse(keyword):
     keyword = keyword.strip()
 
     if not keyword:
-        return "Please enter a keyword to search."
+        return []
 
     results = bible_df[
         bible_df["text"].str.contains(
             keyword,
             case=False,
-            na=False
+            na=False,
+            regex=False
         )
     ]
 
-    if results.empty:
-        return "No verses found with that keyword."
-
-    verses = results.head(5).apply(
-        lambda row: f"{row['citation']} - {row['text']}",
+    return results.head(limit).apply(
+        format_verse,
         axis=1
     ).tolist()
+
+
+# ============================================================
+# Random Bible Verse
+# ============================================================
+
+def get_random_verse():
+    """Return a random Bible verse."""
+
+    verse = bible_df.sample(1).iloc[0]
+
+    return format_verse(verse)
+
+
+# ============================================================
+# Search Bible Verses
+# ============================================================
+
+def search_verse(keyword):
+    """Search Bible verses by keyword or phrase."""
+
+    keyword = keyword.strip()
+
+    if not keyword:
+        return "Please enter a keyword to search."
+
+    verses = search_bible_text(keyword)
+
+    if not verses:
+        return "No verses found with that keyword."
 
     return "\n\n".join(verses)
 
 
-# --------------------------------------------------
-# Generate Bible-style verse
-# --------------------------------------------------
+# ============================================================
+# Generate Bible-Style Verse
+# ============================================================
 
-def generate_bible_style_verse(prompt):
-    prompt = prompt.strip()
+def generate_bible_style_verse(topic):
+    """
+    Generate an original Bible-inspired verse using Gemini.
+    The generated text must not be presented as actual Scripture.
+    """
 
-    if not prompt:
+    topic = topic.strip()
+
+    if not topic:
         return "Please enter a topic for the verse."
 
     full_prompt = f"""
-Write a short, original Bible-inspired verse in a
-King James-style tone about the following topic:
+Write a short, original Bible-inspired verse about:
 
-{prompt}
+{topic}
+
+Style:
+- Warm
+- Inspirational
+- Reflective
+- Biblical in tone
+- Concise
 
 Important:
-- Do not claim that the verse is an actual Bible verse.
-- Do not invent a Bible citation.
-- Keep it inspirational and concise.
+- This must be completely original.
+- Do NOT claim that it is actual Scripture.
+- Do NOT invent a Bible citation.
+- Do NOT attribute it to a biblical author.
+- Do not use quotation marks around the response.
+- Return only the generated verse.
 """
 
     try:
+        client = get_ai_client()
+
         response = client.models.generate_content(
             model=MODEL_NAME,
             contents=full_prompt
         )
 
-        verse = response.text.strip()
+        if not response.text:
+            return "Sorry, VerseLight could not generate a verse right now."
 
-        return verse
+        return response.text.strip()
 
     except Exception as e:
-        print(f"Gemini generation error: {e}")
-        return "Sorry, VerseLight could not generate a verse right now."
+        print(f"Gemini generation error: {repr(e)}")
+
+        return (
+            "Sorry, VerseLight could not generate a verse right now. "
+            "Please try again."
+        )
 
 
-# --------------------------------------------------
-# Find scriptures related to a question
-# --------------------------------------------------
+# ============================================================
+# Bible Question / Topic Search
+# ============================================================
+
+TOPIC_KEYWORDS = {
+    "love": [
+        "love",
+        "loving",
+        "loved"
+    ],
+
+    "faith": [
+        "faith",
+        "believe",
+        "belief",
+        "trust"
+    ],
+
+    "hope": [
+        "hope",
+        "hopeless"
+    ],
+
+    "peace": [
+        "peace",
+        "peaceful"
+    ],
+
+    "fear": [
+        "fear",
+        "afraid",
+        "scared",
+        "fearful"
+    ],
+
+    "forgiveness": [
+        "forgive",
+        "forgiveness",
+        "forgiving"
+    ],
+
+    "strength": [
+        "strength",
+        "strong",
+        "weakness"
+    ],
+
+    "wisdom": [
+        "wisdom",
+        "wise"
+    ],
+
+    "prayer": [
+        "prayer",
+        "pray",
+        "praying"
+    ],
+
+    "marriage": [
+        "marriage",
+        "married",
+        "husband",
+        "wife"
+    ],
+
+    "family": [
+        "family",
+        "children",
+        "child",
+        "parent",
+        "parents"
+    ],
+
+    "anger": [
+        "anger",
+        "angry"
+    ],
+
+    "anxiety": [
+        "anxiety",
+        "anxious",
+        "worry",
+        "worried"
+    ],
+
+    "healing": [
+        "healing",
+        "heal",
+        "sick",
+        "illness"
+    ],
+
+    "sin": [
+        "sin",
+        "sinful",
+        "temptation",
+        "tempted"
+    ],
+
+    "purpose": [
+        "purpose",
+        "calling"
+    ]
+}
+
+
+def identify_topic(question):
+    """Identify a common biblical topic from a natural-language question."""
+
+    question_lower = question.lower()
+
+    for topic, keywords in TOPIC_KEYWORDS.items():
+        for keyword in keywords:
+            if keyword in question_lower:
+                return topic
+
+    return None
+
 
 def get_scriptures_about_topic(question):
+    """
+    Find Bible verses related to a natural-language question.
+
+    This feature does not require Gemini.
+    """
+
     question = question.strip()
 
     if not question:
         return "Please ask a Bible-related question."
 
-    topic_prompt = f"""
-Identify the main biblical topic in this question.
+    topic = identify_topic(question)
 
-Question:
-{question}
+    # Search for a recognized biblical topic.
+    if topic:
+        verses = search_bible_text(topic)
 
-Return only one or two simple keywords.
+        if verses:
+            return "\n\n".join(verses)
 
-Examples:
-faith
-love
-forgiveness
-peace
-anxiety
-marriage
-hope
-wisdom
-fear
-strength
-"""
+    # If no known topic was detected, try searching
+    # the question itself.
+    verses = search_bible_text(question)
 
-    try:
-        topic_response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=topic_prompt
-        )
+    if verses:
+        return "\n\n".join(verses)
 
-        topic = topic_response.text.strip().lower()
-
-        matches = bible_df[
-            bible_df["text"].str.contains(
-                topic,
-                case=False,
-                na=False
-            )
-        ]
-
-        if matches.empty:
-            return "No scriptures found about that topic."
-
-        results = matches.head(5).apply(
-            lambda row: f"{row['citation']} - {row['text']}",
-            axis=1
-        ).tolist()
-
-        return "\n\n".join(results)
-
-    except Exception as e:
-        print(f"Question processing error: {e}")
-        return "Sorry, VerseLight could not process your question right now."
+    return (
+        "I couldn't find matching scriptures for that question. "
+        "Try asking about love, faith, hope, peace, forgiveness, "
+        "prayer, wisdom, strength, or another biblical topic."
+    )
 
 
-# --------------------------------------------------
-# Saved verses
-# --------------------------------------------------
+# ============================================================
+# Saved Verses
+# ============================================================
 
 def save_verse(verse):
     """
-    Local-development helper.
+    Save a verse temporarily.
 
-    Vercel's normal filesystem is read-only, so this should
-    not be treated as permanent storage in production.
+    Vercel's filesystem is not permanent storage, so this is
+    only temporary. Persistent saved verses should eventually
+    use a database.
     """
 
     saved_file = "/tmp/saved_verses.json"
 
     try:
         if os.path.exists(saved_file):
-            with open(saved_file, "r", encoding="utf-8") as f:
-                saved_verses = json.load(f)
+
+            with open(
+                saved_file,
+                "r",
+                encoding="utf-8"
+            ) as file:
+
+                saved_verses = json.load(file)
+
         else:
             saved_verses = []
 
         saved_verses.append(verse)
 
-        with open(saved_file, "w", encoding="utf-8") as f:
-            json.dump(saved_verses, f, indent=4)
+        with open(
+            saved_file,
+            "w",
+            encoding="utf-8"
+        ) as file:
+
+            json.dump(
+                saved_verses,
+                file,
+                indent=4,
+                ensure_ascii=False
+            )
 
         return True
 
     except Exception as e:
-        print(f"Save verse error: {e}")
+
+        print(f"Save verse error: {repr(e)}")
+
         return False
