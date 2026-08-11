@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>VerseLight</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&family=Roboto&display=swap" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav style="display: flex; justify-content: space-between; align-items: center; padding: 20px; background-color: var(--card-light); border-bottom: 1px solid #ccc;">
+        <div style="display: flex; gap: 20px;">
+            <a href="/" style="text-decoration: none; color: var(--text-light); font-weight: bold;">Home</a>
+            <a href="/help" style="text-decoration: none; color: var(--text-light);">Help</a>
+            <a href="/about" style="text-decoration: none; color: var(--text-light);">About Us</a>
+            <a href="/contact" style="text-decoration: none; color: var(--text-light);">Contact</a>
+        </div>
+        <div>
+            <img src="/static/images/logo.png" alt="UCC Logo" style="height: 40px;">
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>🌟 Welcome to VerseLight 🌟</h1>
+        <p>✨ Your daily dose of inspiration and wisdom. ✨</p>
+
+        <div style="text-align: right; padding: 20px;">
+            <input type="text" id="generateInput" placeholder="✍️ Generate a verse...">
+            <div class="center">
+                <button onclick="generateVerse()">Generate</button>
+            </div>
+        </div>
+
+        <!-- Dark mode toggle -->
+        <div class="center">
+            <button id="toggleDarkMode" onclick="toggleDarkMode()">🌙 Toggle Dark Mode</button>
+        </div>
+
+        <!-- Random Verse -->
+        <div class="btn-group center">
+            <button onclick="getRandomVerse()">📖 Get Random Verse</button>
+        </div>
+
+        <!-- Search Section -->
+        <div class="search-section">
+            <input type="text" id="searchInput" placeholder="🔍 Search for a verse...">
+            <div class="center">
+                <button onclick="searchVerse()">Search</button>
+            </div>
+        </div>
+
+        <!-- Ask a Bible Question Section -->
+        <div class="ask-question-section">
+            <input type="text" id="questionInput" placeholder="❓ Ask a Bible question...">
+            <div class="center">
+                <button onclick="askBibleQuestion()">Ask</button>
+            </div>
+        </div>
+
+        <!-- NEW: Chatbot UI Section -->
+        <div class="chatbot-container">
+            <h2>💬 Chat with VerseLight</h2>
+            <div id="chatWindow" class="chat-window"></div>
+            <div class="chat-input">
+                <input type="text" id="chatInput" placeholder="Type your Bible question...">
+                <button onclick="sendChat()">Send</button>
+            </div>
+        </div>
+
+        <!-- Loader -->
+        <div id="loader" class="loader" style="display:none;">⏳ Loading your verse...</div>
+
+        <!-- Verse Outputs -->
+        <div id="verseDisplay" class="verse-display">✨ Your verse will appear here.</div>
+        <div id="generateDisplay" class="verse-display" style="display:none;"></div>
+        <div id="errorDisplay" class="error-display" style="display:none;">⚠️ Error: Verse not found.</div>
+
+        <!-- Audio toggle -->
+        <div class="center audio-control">
+            <button onclick="toggleAudio()">🎵 Toggle Harp Music</button>
+            <audio id="bgAudio" autoplay loop>
+                <source src="static/harp.mp3" type="audio/mpeg">
+                Your browser does not support the audio element.
+            </audio>
+        </div>
+    </div>
+
+    <footer style="text-align: center; padding: 20px; background-color: var(--card-light); border-top: 1px solid #ccc;">
+        <p>© 2023 VerseLight. All rights reserved.</p>
+        <p>Made with ❤️ by VerseLight Team</p>
+    </footer>
+
+    <script>
+        function getRandomVerse() {
+            showLoader();
+            fetch("/api/random")
+                .then(response => response.json())
+                .then(data => {
+                    displayVerse(data.verse);
+                });
+        }
+
+        function searchVerse() {
+            const keyword = document.getElementById("searchInput").value;
+            if (!keyword) return;
+            showLoader();
+            fetch(`/api/search?q=${encodeURIComponent(keyword)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayVerse(data.verse);
+                });
+        }
+
+        function generateVerse() {
+            const prompt = document.getElementById("generateInput").value;
+            if (!prompt) return;
+            showLoader();
+            fetch(`/api/generate?q=${encodeURIComponent(prompt)}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("generateDisplay").innerText = data.verse;
+                    document.getElementById("generateDisplay").style.display = "block";
+                    document.getElementById("verseDisplay").style.display = "none";
+                    hideLoader();
+                });
+        }
+
+        function askBibleQuestion() {
+            const question = document.getElementById("questionInput").value;
+            if (!question) return;
+            showLoader();
+            fetch(`/api/question?q=${encodeURIComponent(question)}`)
+                .then(response => response.json())
+                .then(data => {
+                    displayVerse(data.verses);
+                });
+        }
+
+        function toggleDarkMode() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function toggleAudio() {
+            const audio = document.getElementById("bgAudio");
+            if (audio.paused) {
+                audio.play();
+            } else {
+                audio.pause();
+            }
+        }
+
+        function showLoader() {
+            document.getElementById("loader").style.display = "block";
+            document.getElementById("verseDisplay").style.display = "none";
+            document.getElementById("errorDisplay").style.display = "none";
+            document.getElementById("generateDisplay").style.display = "none";
+        }
+
+        function hideLoader() {
+            document.getElementById("loader").style.display = "none";
+        }
+
+        function displayVerse(verses) {
+            const displayDiv = document.getElementById("verseDisplay");
+            displayDiv.innerHTML = "";
+
+            if (Array.isArray(verses)) {
+                verses.forEach(verse => {
+                    const verseDiv = document.createElement("div");
+                    verseDiv.classList.add("single-verse");
+
+                    const textEl = document.createElement("p");
+                    textEl.innerText = verse;
+
+                    const saveBtn = document.createElement("button");
+                    saveBtn.innerText = "💾 Save";
+                    saveBtn.onclick = () => saveVerse(verse);
+
+                    verseDiv.appendChild(textEl);
+                    verseDiv.appendChild(saveBtn);
+                    displayDiv.appendChild(verseDiv);
+                });
+            } else {
+                displayDiv.innerText = verses;
+            }
+
+            displayDiv.style.display = "block";
+            hideLoader();
+        }
+
+        function saveVerse(verse) {
+            fetch("/api/save", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ verse: verse })
+            })
+            .then(response => response.json())
+            .then(data => alert("✅ Verse saved!"))
+            .catch(err => alert("❌ Failed to save verse."));
+        }
+
+        function sendChat() {
+            const input = document.getElementById("chatInput");
+            const chatWindow = document.getElementById("chatWindow");
+            const message = input.value.trim();
+            if (!message) return;
+
+            chatWindow.innerHTML += `<div class="chat-message chat-user"><strong>You:</strong> ${message}</div>`;
+            input.value = '';
+            chatWindow.scrollTop = chatWindow.scrollHeight;
+
+            fetch(`/api/question?q=${encodeURIComponent(message)}`)
+                .then(response => response.json())
+                .then(data => {
+                    const botMessage = data.verses || "I couldn't find an answer.";
+                    chatWindow.innerHTML += `<div class="chat-message chat-bot"><strong>BibleGPT:</strong> ${botMessage}</div>`;
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                })
+                .catch(err => {
+                    chatWindow.innerHTML += `<div class="chat-message chat-bot"><strong>BibleGPT:</strong> ❌ Something went wrong.</div>`;
+                    chatWindow.scrollTop = chatWindow.scrollHeight;
+                });
+        }
+
+        // Enter key listeners
+        document.getElementById("generateInput").addEventListener("keypress", e => e.key === "Enter" && generateVerse());
+        document.getElementById("searchInput").addEventListener("keypress", e => e.key === "Enter" && searchVerse());
+        document.getElementById("questionInput").addEventListener("keypress", e => e.key === "Enter" && askBibleQuestion());
+        document.getElementById("chatInput").addEventListener("keypress", e => e.key === "Enter" && sendChat());
+    </script>
+</body>
+</html>
