@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+  <title>About — VerseLight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="brand" href="/" aria-label="VerseLight Home">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="VerseLight logo">
+    <span>VerseLight</span>
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/help">Help</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+  </div>
+  <button class="nav-theme" id="toggleDarkMode" type="button" onclick="toggleDarkMode()" aria-label="Toggle dark mode">☾</button>
+</nav>
+
+<main class="page-shell narrow">
+  <section class="info-page">
+    <p class="eyebrow">OUR PURPOSE</p>
+    <h1>A peaceful space for Scripture and reflection.</h1>
+    
+    <p><strong>VerseLight</strong> was created to shine the light of God’s Word into the lives of believers and seekers through thoughtful, accessible technology.</p>
+    <p>Whether you are searching for encouragement, clarity, wisdom, or simply a verse to meditate on, VerseLight is designed to help you spend meaningful time with Scripture.</p>
+    <h2>Our Vision</h2>
+    <p>To make the Bible accessible, searchable, and inspiring — through modern technology infused with timeless faith.</p>
+    <div class="quote-box">“Let God’s Word Light Your Path.”</div>
+    <p class="muted">VerseLight is a technology project created with faith, purpose, and love.</p>
+    
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-brand">VerseLight</div>
+  <p>Let God’s Word Light Your Path.</p>
+  <p class="copyright">© 2026 VerseLight. All rights reserved.</p>
+</footer>
+
+<script>
+function toggleDarkMode() {
+  document.body.classList.toggle("dark-mode");
+  localStorage.setItem("verselight-dark", document.body.classList.contains("dark-mode") ? "1" : "0");
+}
+if (localStorage.getItem("verselight-dark") === "1") document.body.classList.add("dark-mode");
+</script>
+</body>
+</html>

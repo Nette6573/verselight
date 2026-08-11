@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+  <title>Help — VerseLight</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="brand" href="/" aria-label="VerseLight Home">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="VerseLight logo">
+    <span>VerseLight</span>
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/help">Help</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+  </div>
+  <button class="nav-theme" id="toggleDarkMode" type="button" onclick="toggleDarkMode()" aria-label="Toggle dark mode">☾</button>
+</nav>
+
+<main class="page-shell narrow">
+  <section class="info-page">
+    <p class="eyebrow">GETTING STARTED</p>
+    <h1>How can VerseLight help?</h1>
+    
+    <p>VerseLight gives you several simple ways to explore Scripture.</p>
+    <div class="help-list">
+      <div><strong>📖 Random Verse</strong><span>Receive a Scripture for reflection and encouragement.</span></div>
+      <div><strong>🔎 Search</strong><span>Search the Bible dataset using a word or phrase.</span></div>
+      <div><strong>💬 Ask a Question</strong><span>Ask a Bible-related question and receive related Scriptures.</span></div>
+      <div><strong>✨ Generate</strong><span>Request an original Bible-inspired passage. It is AI-generated and should never be mistaken for Scripture.</span></div>
+      <div><strong>💾 Save</strong><span>Save a displayed verse for the current session.</span></div>
+    </div>
+    <h2>A note about AI</h2>
+    <p>VerseLight uses AI to assist with topic interpretation and original Bible-inspired writing. AI-generated material is not Scripture and should not be presented as an actual Bible verse or citation.</p>
+    <p>For technical support, visit the <a href="/contact">Contact page</a>.</p>
+    
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-brand">VerseLight</div>
+  <p>Let God’s Word Light Your Path.</p>
+  <p class="copyright">© 2026 VerseLight. All rights reserved.</p>
+</footer>
+
+<script>
+function toggleDarkMode() {
+  document.body.classList.toggle("dark-mode");
+  localStorage.setItem("verselight-dark", document.body.classList.contains("dark-mode") ? "1" : "0");
+}
+if (localStorage.getItem("verselight-dark") === "1") document.body.classList.add("dark-mode");
+</script>
+</body>
+</html>

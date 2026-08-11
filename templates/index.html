@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VerseLight helps you explore, search, and reflect on the Word of God.">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/favicon.png') }}">
+  <title>VerseLight — Explore, Search, Discover</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="brand" href="/" aria-label="VerseLight Home">
+    <img src="{{ url_for('static', filename='images/logo.png') }}" alt="VerseLight logo">
+    <span>VerseLight</span>
+  </a>
+  <div class="nav-links">
+    <a href="/">Home</a>
+    <a href="/help">Help</a>
+    <a href="/about">About</a>
+    <a href="/contact">Contact</a>
+  </div>
+  <button class="nav-theme" id="toggleDarkMode" type="button" onclick="toggleDarkMode()" aria-label="Toggle dark mode">☾</button>
+</nav>
+
+<main class="page-shell">
+  <section class="hero">
+    <div class="hero-logo">
+      <img src="{{ url_for('static', filename='images/logo.png') }}" alt="VerseLight">
+    </div>
+    <p class="eyebrow">EXPLORE • SEARCH • DISCOVER</p>
+    <h1>Let God’s Word <span>Light Your Path.</span></h1>
+    <p class="hero-copy">A peaceful place to discover Scripture, reflect on God’s Word, and find encouragement for your journey.</p>
+  </section>
+
+  <section class="feature-grid">
+    <article class="feature-card">
+      <div class="feature-icon">📖</div>
+      <h2>Random Verse</h2>
+      <p>Receive a Scripture for reflection and encouragement.</p>
+      <button onclick="getRandomVerse()">Get a Verse</button>
+    </article>
+
+    <article class="feature-card">
+      <div class="feature-icon">🔎</div>
+      <h2>Search Scripture</h2>
+      <p>Search the Bible by a word or phrase.</p>
+      <input type="text" id="searchInput" placeholder="e.g. hope, faith, love" aria-label="Search Scripture">
+      <button onclick="searchVerse()">Search</button>
+    </article>
+
+    <article class="feature-card">
+      <div class="feature-icon">✨</div>
+      <h2>Bible-Inspired Writing</h2>
+      <p>Ask for an original Bible-inspired reflection. It is clearly identified as AI-generated.</p>
+      <input type="text" id="generateInput" placeholder="e.g. strength in difficult times" aria-label="Generate a Bible-inspired verse">
+      <button onclick="generateVerse()">Generate</button>
+    </article>
+
+    <article class="feature-card">
+      <div class="feature-icon">💬</div>
+      <h2>Ask a Bible Question</h2>
+      <p>Ask a faith-related question and discover related Scriptures.</p>
+      <input type="text" id="questionInput" placeholder="What does the Bible say about forgiveness?" aria-label="Ask a Bible question">
+      <button onclick="askBibleQuestion()">Ask</button>
+    </article>
+  </section>
+
+  <section class="results-panel">
+    <div id="loader" class="loader" hidden>Seeking Scripture…</div>
+    <div id="errorDisplay" class="error-display" hidden></div>
+    <div id="generateDisplay" class="verse-display" hidden></div>
+    <div id="verseDisplay" class="verse-display">
+      <p class="placeholder">Your Scripture will appear here.</p>
+    </div>
+  </section>
+
+  <section class="chat-card">
+    <div>
+      <p class="eyebrow">VERSELIGHT GUIDE</p>
+      <h2>Ask, reflect, and explore.</h2>
+      <p>Use VerseLight to find Scripture related to your question. AI-generated content is not a substitute for the Bible itself.</p>
+    </div>
+    <div id="chatWindow" class="chat-window" aria-live="polite"></div>
+    <div class="chat-input">
+      <input type="text" id="chatInput" placeholder="Ask a Bible-related question…" aria-label="Chat with VerseLight">
+      <button onclick="sendChat()">Send</button>
+    </div>
+  </section>
+</main>
+
+
+<footer class="site-footer">
+  <div class="footer-brand">VerseLight</div>
+  <p>Let God’s Word Light Your Path.</p>
+  <p class="copyright">© 2026 VerseLight. All rights reserved.</p>
+</footer>
+
+
+<script>
+function setLoading(isLoading) {
+  document.getElementById("loader").hidden = !isLoading;
+}
+
+function showError(message) {
+  const el = document.getElementById("errorDisplay");
+  el.textContent = message;
+  el.hidden = !message;
+}
+
+function displayVerse(content) {
+  const display = document.getElementById("verseDisplay");
+  const generated = document.getElementById("generateDisplay");
+  generated.hidden = true;
+  display.innerHTML = "";
+
+  const verses = Array.isArray(content) ? content : [content];
+  verses.forEach(verse => {
+    const card = document.createElement("div");
+    card.className = "single-verse";
+
+    const text = document.createElement("p");
+    text.textContent = verse;
+
+    const save = document.createElement("button");
+    save.className = "secondary-btn";
+    save.textContent = "Save";
+    save.onclick = () => saveVerse(verse);
+
+    card.appendChild(text);
+    card.appendChild(save);
+    display.appendChild(card);
+  });
+  display.hidden = false;
+}
+
+async function apiGet(url) {
+  setLoading(true);
+  showError("");
+  try {
+    const response = await fetch(url);
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Something went wrong.");
+    return data;
+  } catch (error) {
+    showError(error.message || "Unable to complete the request right now.");
+    return null;
+  } finally {
+    setLoading(false);
+  }
+}
+
+async function getRandomVerse() {
+  const data = await apiGet("/api/random");
+  if (data) displayVerse(data.verse);
+}
+
+async function searchVerse() {
+  const value = document.getElementById("searchInput").value.trim();
+  if (!value) return;
+  const data = await apiGet(`/api/search?q=${encodeURIComponent(value)}`);
+  if (data) displayVerse(data.verse);
+}
+
+async function generateVerse() {
+  const value = document.getElementById("generateInput").value.trim();
+  if (!value) return;
+  const data = await apiGet(`/api/generate?q=${encodeURIComponent(value)}`);
+  if (data) {
+    document.getElementById("verseDisplay").hidden = true;
+    const generated = document.getElementById("generateDisplay");
+    generated.textContent = data.verse;
+    generated.hidden = false;
+  }
+}
+
+async function askBibleQuestion() {
+  const value = document.getElementById("questionInput").value.trim();
+  if (!value) return;
+  const data = await apiGet(`/api/question?q=${encodeURIComponent(value)}`);
+  if (data) displayVerse(data.verses);
+}
+
+async function saveVerse(verse) {
+  try {
+    const response = await fetch("/api/save", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ verse })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "Unable to save verse.");
+    alert("Verse saved for this session.");
+  } catch (error) {
+    alert(error.message);
+  }
+}
+
+async function sendChat() {
+  const input = document.getElementById("chatInput");
+  const windowEl = document.getElementById("chatWindow");
+  const message = input.value.trim();
+  if (!message) return;
+
+  addChatMessage("You", message, "chat-user");
+  input.value = "";
+
+  const data = await apiGet(`/api/question?q=${encodeURIComponent(message)}`);
+  addChatMessage("VerseLight", data ? (data.verses || "No related Scriptures found.") : "I couldn't process that question right now.", "chat-bot");
+}
+
+function addChatMessage(label, message, className) {
+  const windowEl = document.getElementById("chatWindow");
+  const item = document.createElement("div");
+  item.className = `chat-message ${className}`;
+  const strong = document.createElement("strong");
+  strong.textContent = label + ": ";
+  item.appendChild(strong);
+  item.appendChild(document.createTextNode(message));
+  windowEl.appendChild(item);
+  windowEl.scrollTop = windowEl.scrollHeight;
+}
+
+function toggleDarkMode() {
+  document.body.classList.toggle("dark-mode");
+  localStorage.setItem("verselight-dark", document.body.classList.contains("dark-mode") ? "1" : "0");
+}
+
+if (localStorage.getItem("verselight-dark") === "1") {
+  document.body.classList.add("dark-mode");
+}
+
+document.querySelectorAll("input").forEach(input => {
+  input.addEventListener("keydown", event => {
+    if (event.key !== "Enter") return;
+    if (input.id === "searchInput") searchVerse();
+    if (input.id === "generateInput") generateVerse();
+    if (input.id === "questionInput") askBibleQuestion();
+    if (input.id === "chatInput") sendChat();
+  });
+});
+</script>
+</body>
+</html>
